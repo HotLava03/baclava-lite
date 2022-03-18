@@ -37,7 +37,6 @@ suspend fun eval(code: String, variables: Map<String, Any>): String = coroutineS
     // Get the engine.
     val engine = ScriptEngineManager().getEngineByExtension("kts")
     for ((key, value) in variables) engine.put(key, value)
-
     /*val scriptPrefix = buildString {
         for ((key, value) in engine.getBindings(ScriptContext.ENGINE_SCOPE)) {
             if ("." !in key) {
