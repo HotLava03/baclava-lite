@@ -5,8 +5,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import net.dv8tion.jda.api.requests.RestAction
+import org.jetbrains.kotlin.cli.common.repl.KotlinJsr223JvmScriptEngineFactoryBase
+import org.jetbrains.kotlin.cli.common.repl.ScriptArgsWithTypes
+import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
+import org.jetbrains.kotlin.script.jsr223.KotlinStandardJsr223ScriptTemplate
+import java.io.File
+import javax.script.Bindings
 import javax.script.ScriptContext
-import javax.script.ScriptEngineManager
+import javax.script.ScriptEngine
+
+lateinit var engine: ScriptEngine
 
 private val IMPORTS = listOf(
         "io.github.hotlava03.baclavalite.cleverbot.*",
@@ -33,19 +41,14 @@ private val IMPORTS = listOf(
         "kotlin.properties.*",
 )
 
+fun initKotlinEvalEngine() {
+    engine = BaclavaKotlinScriptEngineFactory().scriptEngine
+}
+
 suspend fun eval(code: String, variables: Map<String, Any>): String = coroutineScope {
     // Get the engine.
-    val engine = ScriptEngineManager().getEngineByExtension("kts")
+    // val engine = ScriptEngineManager().getEngineByExtension("kts")
     for ((key, value) in variables) engine.put(key, value)
-    /*val scriptPrefix = buildString {
-        for ((key, value) in engine.getBindings(ScriptContext.ENGINE_SCOPE)) {
-            if ("." !in key) {
-                val name: String = value.javaClass.name.replace("object", "`object`")
-                val bind = """val $key = bindings["$key"] as $name"""
-                appendLine(bind)
-            }
-        }
-    }*/
 
     val toEval = "import " + IMPORTS.joinToString("\nimport ") + "\n" + /*"\n" + scriptPrefix + "\n" +*/ code
     try {
@@ -67,8 +70,26 @@ suspend fun eval(code: String, variables: Map<String, Any>): String = coroutineS
         return@coroutineScope "null"
     } catch (t: Throwable) {
         val err = t.stackTraceToString()
-        return@coroutineScope if (err.length > 2000) t.stackTraceToString().substring(0, 2000)
+        return@coroutineScope if (err.length > 1990) t.stackTraceToString().substring(0, 1990)
                 .replace("\\s+at .+$".toRegex(), "")
         else err
     }
+}
+
+internal class BaclavaKotlinScriptEngineFactory : KotlinJsr223JvmScriptEngineFactoryBase() {
+    override fun getScriptEngine(): ScriptEngine {
+        return KotlinJsr223JvmLocalScriptEngine(
+                this,
+                listOf(getJarFile()),
+                KotlinStandardJsr223ScriptTemplate::class.qualifiedName!!,
+                { ctx, types -> ScriptArgsWithTypes(arrayOf(ctx.getBindings(ScriptContext.ENGINE_SCOPE)), types ?: emptyArray()) },
+                arrayOf(Bindings::class)
+        )
+    }
+
+    private fun getJarFile(): File {
+        return File(BaclavaKotlinScriptEngineFactory::class.java
+                .protectionDomain.codeSource.location.toURI())
+    }
+
 }
