@@ -50,7 +50,17 @@ suspend fun eval(code: String, variables: Map<String, Any>): String = coroutineS
     // val engine = ScriptEngineManager().getEngineByExtension("kts")
     for ((key, value) in variables) engine.put(key, value)
 
-    val toEval = "import " + IMPORTS.joinToString("\nimport ") + "\n" + /*"\n" + scriptPrefix + "\n" +*/ code
+    val scriptPrefix = buildString {
+        for ((key, value) in engine.getBindings(ScriptContext.ENGINE_SCOPE)) {
+            if ("." !in key) {
+                val name: String = value.javaClass.name.replace("object", "`object`")
+                val bind = """val $key = bindings["$key"] as $name"""
+                appendLine(bind)
+            }
+        }
+    }
+
+    val toEval = "import " + IMPORTS.joinToString("\nimport ") + "\n" + "\n" + scriptPrefix + "\n" + code
     try {
         val evaluated: Any? = engine.eval(toEval, engine.context)
         if (evaluated !== null) {
