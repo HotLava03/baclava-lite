@@ -6,16 +6,21 @@ import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import java.math.BigInteger
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.security.MessageDigest
+import java.util.Calendar
+import java.util.Date
 import kotlin.coroutines.CoroutineContext
 
 private const val USER_AGENT =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36"
 
 /**
  * This code is a migration from the original cleverbot-free package for node.js.
@@ -47,7 +52,11 @@ internal class CleverBotWrapper(private val userData: UserData) : CoroutineScope
         if (!::cookies.isInitialized) {
             // Retrieve the XVIS cookie which is necessary to perform requests.
             val req = client.request<HttpResponse> {
-                url("https://www.cleverbot.com/")
+                val date = Calendar.getInstance()
+                val year = date.get(Calendar.YEAR)
+                val month = date.get(Calendar.MONTH).toString().padStart(2, '0')
+                val day = date.get(Calendar.DAY_OF_MONTH).toString().padStart(2, '0')
+                url("https://www.cleverbot.com/extras/conversation-social-min.js?${year}${month}${day}")
                 method = HttpMethod.Get
                 userAgent(USER_AGENT)
             }
@@ -92,15 +101,15 @@ internal class CleverBotWrapper(private val userData: UserData) : CoroutineScope
 
                     val c = cookies[0]
                     cookie(
-                        c.name,
-                        c.value,
-                        c.maxAge,
-                        c.expires,
-                        c.domain,
-                        c.path,
-                        c.secure,
-                        c.httpOnly,
-                        c.extensions,
+                            c.name,
+                            c.value,
+                            c.maxAge,
+                            c.expires,
+                            c.domain,
+                            c.path,
+                            c.secure,
+                            c.httpOnly,
+                            c.extensions,
                     )
 
                     userAgent(USER_AGENT)

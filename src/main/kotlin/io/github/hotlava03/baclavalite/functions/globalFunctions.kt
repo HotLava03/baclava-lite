@@ -8,3 +8,7 @@ import org.apache.logging.log4j.Logger
 fun getLogger(): Logger {
     return LogManager.getLogger(BaclavaLite::class.java)
 }
+
+fun currentClassLoader() : ClassLoader {
+    return Thread.currentThread().contextClassLoader
+}
