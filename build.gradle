@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'io.github.hotlava03'
-version '1.0.1-beta'
+version '1.0.2'
 mainClassName = 'io.github.hotlava03.baclavalite.Main'
 compileJava.options.encoding = 'UTF-8'
 
