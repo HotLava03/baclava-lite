@@ -5,6 +5,7 @@ import io.github.hotlava03.baclavalite.commands.basic.Ping
 import io.github.hotlava03.baclavalite.commands.basic.Version
 import io.github.hotlava03.baclavalite.commands.owner.Eval
 import io.github.hotlava03.baclavalite.commands.utility.Color
+import io.github.hotlava03.baclavalite.commands.utility.Translate
 
 class CommandHandler {
     private val commands: MutableMap<String, Command> = mutableMapOf(
@@ -13,6 +14,7 @@ class CommandHandler {
             "version" to Version(),
             "ping" to Ping(),
             "color" to Color(),
+            "translate" to Translate(),
     )
 
     operator fun get(name: String): Command? {
