@@ -15,6 +15,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.PrivateChannel
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.GenericMessageEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import kotlin.coroutines.CoroutineContext
@@ -28,12 +30,37 @@ class ChatListener : ListenerAdapter(), CoroutineScope {
     private val lastMessages: MutableMap<String, String> = HashMap()
 
     private lateinit var mentionRegex: Regex
-    private val commandHandler = CommandHandler()
+    val commandHandler = CommandHandler()
 
     override fun onGenericMessage(e: GenericMessageEvent) {
         e.channel.retrieveMessageById(e.messageId).queue(::checkMessage) {
             getLogger().warn("Error whilst retrieving message ID ${e.messageId}.")
         }
+    }
+
+    override fun onSlashCommand(e: SlashCommandEvent) {
+        val command = commandHandler[e.name]
+        if (command === null) {
+            return e.reply("This command does not exist.").setEphemeral(true).queue()
+        }
+
+        command.onCommand(CommandEvent(
+                e.jda,
+                e.channel,
+                e.channelType,
+                e.guild,
+                e.isFromGuild,
+                null,
+                null,
+                if (e.channel is PrivateChannel) e.privateChannel else null,
+                e.textChannel,
+                null,
+                e.user,
+                e.member,
+                arrayOf(),
+                true,
+                e,
+        ))
     }
 
     private fun checkMessage(message: Message) {

@@ -1,6 +1,7 @@
 package io.github.hotlava03.baclavalite.commands
 
 import io.github.hotlava03.baclavalite.util.PREFIX
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 abstract class Command {
     // Command properties.
@@ -12,6 +13,8 @@ abstract class Command {
         protected set
     var aliases: Array<String> = arrayOf()
         protected set
+    var isSlashCommandCompatible: Boolean = false
+    var slashCommandOptions: List<OptionData> = listOf()
     var usage: String? = null
         protected set(usage) {
             field = "$PREFIX$name $usage"

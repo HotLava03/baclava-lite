@@ -10,6 +10,7 @@ class Version : Command() {
         category = Category.BASIC
         description = "Retrieve bot version information."
         aliases = arrayOf("ver", "about")
+        isSlashCommandCompatible = true
     }
 
     override fun onCommand(e: CommandEvent) {

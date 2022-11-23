@@ -5,6 +5,8 @@ import io.github.hotlava03.baclavalite.commands.CommandEvent
 import io.github.hotlava03.baclavalite.commands.CommandHandler
 import io.github.hotlava03.baclavalite.util.BACLAVA_COLOR
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.awt.Color
 import java.time.Instant
 
@@ -16,20 +18,24 @@ class Help(private val commandHandler: CommandHandler) : Command() {
         category = Category.BASIC
         description = "Get general bot help."
         aliases = arrayOf("halp", "hulp")
+        isSlashCommandCompatible = true
         usage = "[command]"
     }
 
     override fun onCommand(e: CommandEvent) {
-        if (!::helpMessage.isInitialized) helpMessage = generateHelp()
-
-        if (e.args.isNotEmpty()) {
-            val cmd = commandHandler[e.args[0]]
+        val option = e.slashCommandEvent?.getOption("command")?.asString
+        if (e.args.isNotEmpty() || option !== null) {
+            val cmd = commandHandler[if (option !== null) option else e.args[0]]
             if (cmd == null) e.reply("**Unknown command.**")
             else e.reply(
-                """**Help for command: ${cmd.name}**
+                    """**Help for command: ${cmd.name}**
                     |${cmd.description}
                     |**Usage:** ${cmd.usage}
-                    |**Aliases:** ${cmd.aliases.joinToString("`, `", "`", "`")}
+                    ${
+                        if (cmd.aliases.isNotEmpty())
+                            "|**Aliases:** ${cmd.aliases.joinToString("`, `", "`", "`")}"
+                        else ""
+                    }
                     |*Arguments in `<>` are mandatory and arguments in `[]` are optional.*
                 """.trimMargin()
             )
@@ -39,19 +45,22 @@ class Help(private val commandHandler: CommandHandler) : Command() {
 
         e.author.openPrivateChannel().queue {
             val embed = EmbedBuilder()
-                .setTitle("Baclava Help")
-                .setDescription(helpMessage)
-                .setTimestamp(Instant.now())
-                .setFooter("Use >>help [command] for individual usage.")
-                .setColor(Color.decode(BACLAVA_COLOR))
-                .build()
+                    .setTitle("Baclava Help")
+                    .setDescription(helpMessage)
+                    .setTimestamp(Instant.now())
+                    .setFooter("Use >>help [command] for individual usage.")
+                    .setColor(Color.decode(BACLAVA_COLOR))
+                    .build()
 
             it.sendMessageEmbeds(embed).queue()
             e.reply("**DM sent.**")
         }
     }
 
-    private fun generateHelp(): String {
+    fun initHelp(): String {
+        slashCommandOptions = listOf(
+                generateCommandOption()
+        )
         return buildString {
             var previousCategory: Category? = null
             commandHandler.getAll().sortedBy { it.category }.forEach {
@@ -64,5 +73,14 @@ class Help(private val commandHandler: CommandHandler) : Command() {
                 appendLine("**${it.name}** » ${it.description}")
             }
         }
+    }
+
+    private fun generateCommandOption(): OptionData {
+        val data = OptionData(OptionType.STRING, "command",
+                "The command to get help from.", false)
+        commandHandler.getAll()
+                .filter { it.isSlashCommandCompatible }
+                .forEach { data.addChoice(it.name, it.name) }
+        return data
     }
 }
