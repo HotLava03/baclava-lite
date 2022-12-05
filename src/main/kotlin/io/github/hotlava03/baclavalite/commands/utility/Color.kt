@@ -2,6 +2,8 @@ package io.github.hotlava03.baclavalite.commands.utility
 
 import io.github.hotlava03.baclavalite.commands.Command
 import io.github.hotlava03.baclavalite.commands.CommandEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
@@ -19,12 +21,18 @@ class Color : Command() {
         category = Category.UTILITY
         description = "Visualize a color."
         aliases = arrayOf("getcolor", "colour", "getcolour")
+        isSlashCommandCompatible = true
+        slashCommandOptions = listOf(
+                OptionData(OptionType.STRING, "color", "HEX or RGB for the color.", true)
+        )
         usage = "<hex|rgb>"
         minArgs = 1
     }
 
     override fun onCommand(e: CommandEvent) {
-        val input = e.args[0]
+        val input = if (isSlashCommandCompatible) e.slashCommandEvent!!.getOption("color")?.asString
+            else e.args[0]
+        if (input === null) return e.reply("Missing color code.")
         val color: AwtColor = if (!input.startsWith("#")) {
             val rgb = input.split(",")
             if (rgb.size != 3) return e.reply(INVALID_COLOR_MSG)
@@ -49,9 +57,17 @@ class Color : Command() {
         val out = ByteArrayOutputStream()
         ImageIO.write(bufferedImage, "jpg", out)
 
-        e.channel.sendMessage("**HEX:** #${Integer.toHexString(color.rgb).substring(2)} - " +
-                "**RGB**: ${color.red},${color.green},${color.blue}")
-            .addFile(out.toByteArray(), "color.jpg")
-            .queue()
+        val toRespond = "**HEX:** #${Integer.toHexString(color.rgb).substring(2)} - " +
+                "**RGB**: ${color.red},${color.green},${color.blue}"
+
+        if (e.isFromSlashCommand) {
+            e.slashCommandEvent!!.reply(toRespond)
+                    .addFile(out.toByteArray(), "color.jpg")
+                    .queue()
+        } else {
+            e.channel.sendMessage(toRespond)
+                    .addFile(out.toByteArray(), "color.jpg")
+                    .queue()
+        }
     }
 }

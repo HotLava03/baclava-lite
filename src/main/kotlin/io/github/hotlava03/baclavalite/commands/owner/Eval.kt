@@ -25,7 +25,8 @@ class Eval(private val commandHandler: CommandHandler) : Command(), CoroutineSco
     }
 
     override fun onCommand(e: CommandEvent) {
-        val content = e.message.contentRaw.substring(e.message.contentRaw.indexOf(" ") + 1)
+        // Message can't ever be null since this can't be run from slash commands.
+        val content = e.message!!.contentRaw.substring(e.message.contentRaw.indexOf(" ") + 1)
 
         val code: String = if (content.contains(codeBlockRegex)) content.replace(codeBlockRegex, "$1")
         else content

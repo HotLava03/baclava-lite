@@ -8,6 +8,7 @@ class Ping : Command() {
         name = "ping"
         category = Category.BASIC
         description = "Get the bot's ping."
+        isSlashCommandCompatible = true
     }
 
     override fun onCommand(e: CommandEvent) {
