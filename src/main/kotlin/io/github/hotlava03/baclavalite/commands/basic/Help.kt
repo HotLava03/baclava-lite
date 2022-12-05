@@ -11,7 +11,7 @@ import java.awt.Color
 import java.time.Instant
 
 class Help(private val commandHandler: CommandHandler) : Command() {
-    private lateinit var helpMessage: String
+    lateinit var helpMessage: String
 
     init {
         name = "help"
@@ -43,18 +43,15 @@ class Help(private val commandHandler: CommandHandler) : Command() {
             return
         }
 
-        e.author.openPrivateChannel().queue {
-            val embed = EmbedBuilder()
-                    .setTitle("Baclava Help")
-                    .setDescription(helpMessage)
-                    .setTimestamp(Instant.now())
-                    .setFooter("Use >>help [command] for individual usage.")
-                    .setColor(Color.decode(BACLAVA_COLOR))
-                    .build()
+        val embed = EmbedBuilder()
+                .setTitle("Baclava Help")
+                .setDescription(helpMessage)
+                .setTimestamp(Instant.now())
+                .setFooter("Use >>help [command] for individual usage.")
+                .setColor(Color.decode(BACLAVA_COLOR))
+                .build()
 
-            it.sendMessageEmbeds(embed).queue()
-            e.reply("**DM sent.**")
-        }
+        e.reply(embed)
     }
 
     fun initHelp(): String {
@@ -72,6 +69,9 @@ class Help(private val commandHandler: CommandHandler) : Command() {
 
                 appendLine("**${it.name}** » ${it.description}")
             }
+            appendLine("\n**How to use the Chatbot system**")
+            appendLine("**@mentioning** » Starts a new conversation")
+            appendLine("**replying** » Replies to a conversation, using previous context")
         }
     }
 

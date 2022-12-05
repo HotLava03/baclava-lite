@@ -21,7 +21,8 @@ class BaclavaLite : ListenerAdapter() {
                         *eventListeners().toTypedArray(), // Spread list for it to work in a vararg.
                 ).build()
 
-        (chatListener.commandHandler["help"] as Help).initHelp()
+        val help = (chatListener.commandHandler["help"] as Help)
+        help.helpMessage = help.initHelp()
 
         chatListener.commandHandler.getAll()
                 .filter { it.isSlashCommandCompatible }
@@ -45,7 +46,6 @@ class BaclavaLite : ListenerAdapter() {
     }
 
     private fun eventListeners(): List<ListenerAdapter> = listOf(
-            ChatListener(),
             this,
             chatListener,
     )

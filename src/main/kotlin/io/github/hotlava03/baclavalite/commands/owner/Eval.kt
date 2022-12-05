@@ -46,8 +46,9 @@ class Eval(private val commandHandler: CommandHandler) : Command(), CoroutineSco
 
         e.reply("Compiling...") {
             launch {
-                val result = eval(code, variables)
+                var result = eval(code, variables)
                     .replace(e.jda.token.toRegex(), "censored")
+                result = result.substring(0, result.length.coerceAtMost(2000));
                 it.editMessage("```\n${result}```").queue()
             }
         }
