@@ -8,4 +8,5 @@ data class Message(
         val sender: MessageSender,
         val content: String,
         var timestamp: Long?,
+        var correspondingId: String?,
 )

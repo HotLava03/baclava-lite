@@ -1,11 +1,16 @@
 package io.github.hotlava03.baclavalite
 
+import io.github.hotlava03.baclavalite.functions.getLogger
 import io.github.hotlava03.baclavalite.listeners.ChatListener
+import io.github.hotlava03.baclavalite.util.DEBUG_MODE
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.OnlineStatus
+import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 
-class BaclavaLite {
+class BaclavaLite : ListenerAdapter() {
     fun start(token: String) {
         JDABuilder.create(token, GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS))
                 .addEventListeners(
@@ -13,7 +18,19 @@ class BaclavaLite {
                 ).build()
     }
 
+    override fun onReady(event: ReadyEvent) {
+        getLogger().info("Baclava started.")
+        if (DEBUG_MODE) {
+            event.jda.presence.setPresence(OnlineStatus.IDLE, Activity.watching("debuggers..."))
+            getLogger().warn("Debug mode is on.")
+        } else {
+            event.jda.presence.setPresence(OnlineStatus.ONLINE, Activity.listening("to you."))
+            getLogger().info("Set to production.")
+        }
+    }
+
     private fun eventListeners(): List<ListenerAdapter> = listOf(
             ChatListener(),
+            this
     )
 }

@@ -11,9 +11,19 @@ import java.io.Serializable
  */
 data class MessageBundle(
         var messages: Array<Message>,
-        var user: User,
+        var involvedUsers: Array<String>,
+        var dateCreated: Long? = null
 ) : Serializable {
-    var id: String = user.id
+    fun setLastId(id: String) {
+        val last = messages[messages.size - 1]
+        val secondLast = messages[messages.size - 2]
+
+        last.correspondingId = id
+        secondLast.correspondingId = id
+
+        messages[messages.size - 1] = last
+        messages[messages.size - 2] = secondLast
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -22,14 +32,20 @@ data class MessageBundle(
         other as MessageBundle
 
         if (!messages.contentEquals(other.messages)) return false
-        if (user != other.user) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = messages.contentHashCode()
-        result = 31 * result + user.hashCode()
-        return result
+        return messages.contentHashCode()
+    }
+
+    override fun toString(): String {
+        return buildString {
+            append("Message history:\n")
+            append(messages.joinToString(separator = "\n- ", prefix = "- "))
+            append("\nInvolved users: ")
+            append(involvedUsers.joinToString())
+        }
     }
 }

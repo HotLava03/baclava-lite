@@ -1,14 +1,11 @@
 package io.github.hotlava03.baclavalite.listeners
 
-import io.github.hotlava03.baclavalite.util.simplifyMessage
 import io.github.hotlava03.baclavalite.cleverbot.cleverbot
 import io.github.hotlava03.baclavalite.commands.Command
 import io.github.hotlava03.baclavalite.commands.CommandEvent
 import io.github.hotlava03.baclavalite.commands.CommandHandler
 import io.github.hotlava03.baclavalite.functions.getLogger
-import io.github.hotlava03.baclavalite.util.OWNER
-import io.github.hotlava03.baclavalite.util.PREFIX
-import io.github.hotlava03.baclavalite.util.SELF
+import io.github.hotlava03.baclavalite.util.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,8 +21,6 @@ class ChatListener : ListenerAdapter(), CoroutineScope {
     private var job: Job = Job()
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default + job
-    // Storage containing last message from AI chat per-user (userId => msgId).
-    private val lastMessages: MutableMap<String, String> = HashMap()
 
     private lateinit var mentionRegex: Regex
     private val commandHandler = CommandHandler()
@@ -41,27 +36,33 @@ class ChatListener : ListenerAdapter(), CoroutineScope {
         if (message.author.isBot) return
 
         val reply = message.referencedMessage?.id
-        val lastMessage = lastMessages[message.author.id]
+        if (reply !== null) {
+            val self = message.jda.selfUser.id
+            val id = message.referencedMessage!!.author.id
+            if (self != id) return
+        }
 
         // Handle AI.
-        if (message.contentRaw.contains(mentionRegex) || (reply == lastMessage && reply !== null)) {
+        if (message.contentRaw.contains(mentionRegex) || reply !== null) {
             message.channel.sendTyping().queue()
+            val toSend = if (reply !== null) message.contentRaw else
+                message.contentRaw.replace(mentionRegex, "")
             launch {
-                val response = cleverbot(
-                        message.contentRaw.replace(mentionRegex, "").substring(1),
-                        message.author
-                ) ?: return@launch message.channel.sendMessage("my brain died, say that again").queue()
+                var (response, bundle) = cleverbot(
+                        toSend,
+                        message.author.id,
+                        reply
+                )
 
-                message.reply(simplifyMessage(response)).queue {
-                    lastMessages[message.author.id] = it.id
+                response ?: return@launch message.channel.sendMessage("my brain died, say that again").queue()
+
+                if (DEBUG_MODE) response = "[debug] $response"
+
+                message.reply(response).queue {
+                    bundle!!.setLastId(it.id)
                 }
             }
 
-            return
-        } else if (reply !== null && message.referencedMessage?.author?.id == SELF) {
-            // It's an invalid reply.
-            message.reply("**Invalid reply. " +
-                    "Replying only works on my latest sent message to you.**").queue()
             return
         }
 

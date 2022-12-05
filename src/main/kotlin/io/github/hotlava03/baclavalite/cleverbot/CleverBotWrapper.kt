@@ -16,7 +16,6 @@ import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.util.Calendar
-import java.util.Date
 import kotlin.coroutines.CoroutineContext
 
 private const val USER_AGENT =
@@ -26,7 +25,7 @@ private const val USER_AGENT =
  * This code is a migration from the original cleverbot-free package for node.js.
  * The original idea can be found here: https://github.com/IntriguingTiles/cleverbot-free/blob/master/index.js.
  */
-internal class CleverBotWrapper(private val userData: UserData) : CoroutineScope {
+internal class CleverBotWrapper : CoroutineScope {
     // List of cookies.
     private lateinit var cookies: List<Cookie>
     private lateinit var cbsid: String
